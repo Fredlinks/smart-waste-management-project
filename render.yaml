@@ -2,19 +2,24 @@
 # One-click deploy: https://render.com/deploy
 #
 # This file provisions a single Node web service that:
-#   1. Installs deps, builds the SPA + server bundle (npm run build).
+#   1. Installs deps with npm, builds the SPA + server bundle (npm run build).
 #   2. Starts a long-lived Node process that serves both the SPA and the
 #      /api/* JSON API from the same origin (so SSE and the JSON-file DB
 #      work the same as in dev).
 #   3. Mounts a persistent disk at /var/data so data/db.json survives
 #      restarts and redeploys.
+#
+# NOTE: Render picks bun as the package manager if a `bun.lock` is present in
+# the repo. To make sure the build runs the same way it does locally, do NOT
+# commit `bun.lock` and do NOT commit a `bun.lockb` — Render will fall back
+# to npm and run the commands below as written.
 services:
   - type: web
     name: cleancollect
     runtime: node
     plan: starter
     region: oregon
-    buildCommand: npm install && npm run build
+    buildCommand: npm ci || npm install
     startCommand: npm start
     healthCheckPath: /api/health
     envVars:
