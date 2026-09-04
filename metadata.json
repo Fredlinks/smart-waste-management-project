@@ -1,0 +1,6 @@
+{
+  "name": "CleanCollect – Smart Waste Management Platform",
+  "description": "Full-stack smart waste collection and management platform featuring customer collection booking, driver route optimization with nearest neighbor algorithm, fleet management, dynamic pricing, and comprehensive administrative analytics.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

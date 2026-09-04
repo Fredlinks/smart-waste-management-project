@@ -1,0 +1,163 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Leaflet map styles */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  font-family: inherit;
+  z-index: 10;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  padding: 4px;
+}
+
+.leaflet-popup-content {
+  margin: 8px 12px;
+  line-height: 1.4;
+  font-family: inherit;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* Dark-mode Leaflet tiles + popups */
+.dark .leaflet-tile {
+  filter: invert(0.92) hue-rotate(180deg) brightness(0.95) contrast(0.9);
+}
+.dark .leaflet-popup-content-wrapper,
+.dark .leaflet-popup-tip {
+  background: #1e293b !important;
+  color: #e2e8f0 !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6);
+}
+.dark .leaflet-control-attribution {
+  background: rgba(15, 23, 42, 0.7) !important;
+  color: #cbd5e1 !important;
+}
+.dark .leaflet-control-attribution a {
+  color: #93c5fd !important;
+}
+
+/* "You are here" pulse animation for the user-location marker */
+@keyframes userPulse {
+  0% { transform: scale(1); opacity: 0.45; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+
+/* Global form input defaults — clear contrast in both light and dark mode */
+input[type='text'],
+input[type='email'],
+input[type='password'],
+input[type='tel'],
+input[type='number'],
+input[type='date'],
+input[type='time'],
+input[type='url'],
+input[type='search'],
+textarea,
+select {
+  background-color: #ffffff;
+  color: #0f172a; /* slate-900 */
+  border-color: #cbd5e1; /* slate-300 */
+  caret-color: #059669; /* emerald-600 */
+  font-size: 0.875rem; /* text-sm */
+  line-height: 1.25rem;
+}
+input::placeholder,
+textarea::placeholder {
+  color: #94a3b8; /* slate-400 */
+  opacity: 1;
+}
+input:focus,
+textarea:focus,
+select:focus {
+  background-color: #ffffff;
+  color: #0f172a;
+  outline: none;
+  border-color: #10b981; /* emerald-500 */
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+}
+input:disabled,
+textarea:disabled,
+select:disabled {
+  background-color: #f1f5f9;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.dark input[type='text'],
+.dark input[type='email'],
+.dark input[type='password'],
+.dark input[type='tel'],
+.dark input[type='number'],
+.dark input[type='date'],
+.dark input[type='time'],
+.dark input[type='url'],
+.dark input[type='search'],
+.dark textarea,
+.dark select {
+  background-color: #1e293b; /* slate-800 */
+  color: #f1f5f9; /* slate-100 */
+  border-color: #475569; /* slate-600 */
+  caret-color: #34d399; /* emerald-400 */
+}
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #64748b; /* slate-500 */
+  opacity: 1;
+}
+.dark input:focus,
+.dark textarea:focus,
+.dark select:focus {
+  background-color: #0f172a; /* slate-900 */
+  color: #f8fafc;
+  border-color: #34d399; /* emerald-400 */
+  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.25);
+}
+.dark input:disabled,
+.dark textarea:disabled,
+.dark select:disabled {
+  background-color: #0f172a;
+  color: #64748b;
+}
+
+/* Recharts text colors in dark mode */
+.dark .recharts-text {
+  fill: #cbd5e1 !important;
+}
+.dark .recharts-cartesian-axis-line,
+.dark .recharts-cartesian-axis-tick-line {
+  stroke: #475569 !important;
+}
+.dark .recharts-cartesian-grid line {
+  stroke: #334155 !important;
+}
