@@ -78,10 +78,16 @@ auth modal.
 ```
 .
 ├── server.ts                # dev: Vite + API in one process
+├── server.prod.ts           # prod: serves dist/ + mounts createApp()
 ├── backend/                 # Express app, auth, schemas, JSON DB
 ├── src/                     # React app, contexts, hooks, components
 ├── data/db.json             # auto-created on first run
 ├── docs/                    # PROJECT.md, API.md
+├── render.yaml              # one-click deploy on Render
+├── railway.toml             # Railway config
+├── fly.toml                 # Fly.io config
+├── Dockerfile               # generic Docker / Fly / VPS
+├── Procfile                 # Heroku / Railway compat
 ├── index.html
 ├── package.json
 ├── tsconfig.json
@@ -89,6 +95,57 @@ auth modal.
 ```
 
 See [docs/PROJECT.md § 6](docs/PROJECT.md#6-project-layout) for the full tree.
+
+## Deployment
+
+CleanCollect is a long-lived Node process (Express + Server-Sent Events + a
+JSON-file database). It needs a host that supports **stateful** services —
+**not** Vercel-style serverless functions, where each request is a fresh
+container, the filesystem is read-only, and SSE connections are killed by
+request timeouts. That is why the Vercel build fails to run.
+
+The bundled `render.yaml` gives you a one-click deploy on Render:
+
+1. Push the repo to GitHub.
+2. Open https://render.com/deploy and paste the repo URL (or click
+   "New Blueprint" after connecting the repo).
+3. Render reads `render.yaml`, creates the web service, mounts a 1 GB disk at
+   `/var/data`, generates a strong `AUTH_TOKEN_SECRET`, and starts the app.
+4. The first request to `/api/health` returns `200 { status: "ok" }`. Done.
+
+Equivalent one-shot deploys are configured for:
+
+- **Railway** — `railway.toml` (set `DATA_DIR=/var/data` and mount a volume in
+  the dashboard).
+- **Fly.io** — `fly.toml` + `Dockerfile` (creates a `cleancollect_data` volume
+  at `/var/data` automatically).
+- **Any VPS / Docker host** — `docker run -p 3000:3000
+  -v cleancollect-data:/var/data cleancollect`.
+
+### Environment variables (production)
+
+| Variable            | Purpose                                                                 |
+|---------------------|-------------------------------------------------------------------------|
+| `PORT`              | Port the Node process listens on. Default `3000`.                       |
+| `HOST`              | Bind address. Default `0.0.0.0`.                                       |
+| `DATA_DIR`          | Directory for `db.json`. Default `<cwd>/data`. **Must be a persistent path on Render/Fly/Railway (e.g. `/var/data`).** |
+| `AUTH_TOKEN_SECRET` | HMAC secret for auth tokens. Generate per environment; never reuse.     |
+| `FRONTEND_ORIGIN`   | CORS allow-list. The deploy URL is auto-included via "own host" detection in `createApp()`. |
+| `GEMINI_API_KEY`    | Optional. Only used if you wire Gemini helpers into the app.            |
+
+### Build & run by hand
+
+```bash
+npm install
+npm run build      # vite build (client) + esbuild server.prod.ts -> dist/server.cjs
+DATA_DIR=/var/data npm start
+```
+
+### Verifying persistence after deploy
+
+`GET /api/admin/db-info` returns the absolute DB path and the live record
+counts. `dataDir` should match the mounted volume path; `sizeBytes` should
+grow as you create records.
 
 ## License
 

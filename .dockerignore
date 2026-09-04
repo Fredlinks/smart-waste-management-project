@@ -1,0 +1,14 @@
+# Render / Railway / Fly persistent storage lives outside the build context.
+node_modules
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+dist
+data
+*.log
+.DS_Store
+.vscode
+.idea
+docs

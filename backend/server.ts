@@ -1142,12 +1142,14 @@ export function createApp(): express.Express {
 
   // Admin: DB persistence inspection (helps verify dev/prod parity)
   app.get('/api/admin/db-info', (_req: Request, res: Response) => {
-    const file = path.resolve(process.cwd(), 'data', 'db.json');
+    const file = path.resolve(process.env.DATA_DIR || process.cwd(), 'data', 'db.json');
     const exists = fs.existsSync(file);
     const fileSize = exists ? fs.statSync(file).size : null;
     res.json({
       persistent: exists,
       path: 'data/db.json',
+      absolutePath: file,
+      dataDir: path.resolve(process.env.DATA_DIR || process.cwd(), 'data'),
       sizeBytes: fileSize,
       recordCounts: {
         users: db.users.length,
@@ -1224,12 +1226,19 @@ export function createApp(): express.Express {
   return app;
 }
 
-if (process.env.NODE_ENV !== 'test' && process.argv[1] === fileURLToPath(import.meta.url)) {
-  const app = createApp();
-  const port = Number(process.env.PORT) || 3000;
-  const host = process.env.HOST || '0.0.0.0';
-  app.listen(port, host, () => {
-    console.log(`CleanCollect API listening on http://${host}:${port}`);
-    console.log(`CORS origins: ${(process.env.FRONTEND_ORIGIN || 'http://localhost:5173,http://127.0.0.1:5173')}`);
-  });
+if (process.env.NODE_ENV !== 'test') {
+  // `fileURLToPath(import.meta.url)` is the canonical ESM way to detect "this
+  // file was run directly", but in CJS bundles `import.meta.url` is empty and
+  // the call throws. Only evaluate it when we actually have a URL.
+  const metaUrl = (import.meta as { url?: string }).url;
+  const entryPath = metaUrl ? fileURLToPath(metaUrl) : '';
+  if (entryPath && process.argv[1] === entryPath) {
+    const app = createApp();
+    const port = Number(process.env.PORT) || 3000;
+    const host = process.env.HOST || '0.0.0.0';
+    app.listen(port, host, () => {
+      console.log(`CleanCollect API listening on http://${host}:${port}`);
+      console.log(`CORS origins: ${(process.env.FRONTEND_ORIGIN || 'http://localhost:5173,http://127.0.0.1:5173')}`);
+    });
+  }
 }

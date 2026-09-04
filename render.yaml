@@ -1,0 +1,36 @@
+# Render Blueprint — CleanCollect
+# One-click deploy: https://render.com/deploy
+#
+# This file provisions a single Node web service that:
+#   1. Installs deps, builds the SPA + server bundle (npm run build).
+#   2. Starts a long-lived Node process that serves both the SPA and the
+#      /api/* JSON API from the same origin (so SSE and the JSON-file DB
+#      work the same as in dev).
+#   3. Mounts a persistent disk at /var/data so data/db.json survives
+#      restarts and redeploys.
+services:
+  - type: web
+    name: cleancollect
+    runtime: node
+    plan: starter
+    region: oregon
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: HOST
+        value: 0.0.0.0
+      - key: DATA_DIR
+        value: /var/data
+      - key: AUTH_TOKEN_SECRET
+        generateValue: true
+      - key: FRONTEND_ORIGIN
+        value: http://localhost:3000,http://127.0.0.1:3000
+    disk:
+      name: cleancollect-data
+      mountPath: /var/data
+      sizeGB: 1

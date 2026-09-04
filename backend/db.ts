@@ -24,7 +24,7 @@ import {
   getNearestGhanaLandfill,
 } from '../src/data/ghanaRegions';
 
-const DATA_DIR = path.resolve(process.cwd(), 'data');
+const DATA_DIR = path.resolve(process.env.DATA_DIR || process.cwd(), 'data');
 const DATA_FILE = path.join(DATA_DIR, 'db.json');
 
 interface PersistedState {
