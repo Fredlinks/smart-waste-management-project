@@ -2,7 +2,9 @@ node_modules/
 build/
 dist/
 coverage/
-data/
+# Ignore the runtime data directory at the repo root, but NOT src/data/
+# (which contains the Ghana region geography data shipped with the app).
+/data/
 .DS_Store
 *.log
 .env*
