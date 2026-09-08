@@ -23,7 +23,6 @@ import {
   updatePricingSchema,
   driverLocationSchema,
 } from './schemas';
-import cors from 'cors';
 import {
   CollectionRequest,
   CollectionStatus,
@@ -76,17 +75,52 @@ export function createApp(): express.Express {
   }
   for (const o of allowedOrigins) ownHosts.add(o);
 
-  app.use(
-    cors({
-      origin: (origin, callback) => {
-        if (!origin || ownHosts.has(origin) || allowedOrigins.includes(origin)) {
-          callback(null, true);
+  // Custom CORS middleware that reliably handles same-origin requests
+  // on platforms where the hostname is dynamic (Render, Railway, etc.)
+  app.use((req, res, next) => {
+    const origin = req.headers.origin as string;
+    if (!origin) {
+      // Same-origin request — no Origin header
+      next();
+      return;
+    }
+    if (allowedOrigins.includes(origin) || ownHosts.has(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With');
+      if (req.method === 'OPTIONS') {
+        res.status(204).end();
+        return;
+      }
+      next();
+      return;
+    }
+    // Allow any request whose origin matches the request's own Host header
+    // (handles Render/Railway/any platform where the host is dynamic)
+    const reqHost = req.headers.host as string;
+    if (reqHost) {
+      try {
+        const reqUrl = new URL(`http://${reqHost}`);
+        const reqOrigin = `${reqUrl.protocol}//${reqUrl.host}`;
+        if (origin === reqOrigin) {
+          res.setHeader('Access-Control-Allow-Origin', origin);
+          res.setHeader('Access-Control-Allow-Credentials', 'true');
+          res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+          res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With');
+          if (req.method === 'OPTIONS') {
+            res.status(204).end();
+            return;
+          }
+          next();
           return;
         }
-        callback(new Error(`CORS blocked origin: ${origin}`));
-      },
-    })
-  );
+      } catch {
+        // ignore
+      }
+    }
+    res.status(403).json({ error: `CORS blocked origin: ${origin}` });
+  });
   app.use(express.json());
 
   // Persist DB after any state-mutating request finishes (no-op when not dirty)
@@ -1222,6 +1256,17 @@ export function createApp(): express.Express {
     db.seed();
     res.json({ success: true, message: 'Database reset to initial demo state' });
   });
+
+  // Serve static frontend assets in production
+  const distDir = path.resolve(process.cwd(), 'dist');
+  if (fs.existsSync(distDir)) {
+    app.use(express.static(distDir));
+    app.get('*', (req: Request, res: Response) => {
+      if (!req.path.startsWith('/api')) {
+        res.sendFile(path.join(distDir, 'index.html'));
+      }
+    });
+  }
 
   return app;
 }
