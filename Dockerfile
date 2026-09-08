@@ -32,9 +32,10 @@ COPY --from=build /app/dist ./dist
 COPY --from=build /app/dist/server.cjs ./dist/server.cjs
 
 # The API resolves the DB path from DATA_DIR (or cwd as a fallback).
-# Mount a writable volume at /var/data so data persists across restarts.
+# Mount a Railway Volume at /var/data (configure in the Railway dashboard
+# under Service -> Volumes) so data persists across restarts. Do not use
+# the Docker VOLUME instruction -- Railway does not support it.
 RUN mkdir -p /var/data
-VOLUME ["/var/data"]
 
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
