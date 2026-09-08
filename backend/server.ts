@@ -75,6 +75,14 @@ export function createApp(): express.Express {
   }
   for (const o of allowedOrigins) ownHosts.add(o);
 
+  // Serve static frontend assets in production BEFORE the CORS middleware so
+  // that static asset requests (which typically lack an Origin header, e.g.
+  // <script>/<link> tags) are never subject to CORS checks.
+  const distDir = path.resolve(process.cwd(), 'dist');
+  if (fs.existsSync(distDir)) {
+    app.use(express.static(distDir));
+  }
+
   // Custom CORS middleware that reliably handles same-origin requests
   // on platforms where the hostname is dynamic (Render, Railway, etc.)
   app.use((req, res, next) => {
@@ -1257,10 +1265,8 @@ export function createApp(): express.Express {
     res.json({ success: true, message: 'Database reset to initial demo state' });
   });
 
-  // Serve static frontend assets in production
-  const distDir = path.resolve(process.cwd(), 'dist');
+  // SPA fallback: serve index.html for any non-API route not matched above
   if (fs.existsSync(distDir)) {
-    app.use(express.static(distDir));
     app.get('*', (req: Request, res: Response) => {
       if (!req.path.startsWith('/api')) {
         res.sendFile(path.join(distDir, 'index.html'));
